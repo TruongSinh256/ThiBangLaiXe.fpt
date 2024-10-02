@@ -1,0 +1,124 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<div class="container mt-5">
+    <h2>Danh sách câu hỏi</h2>
+    <Button class="btnAddQuestion" onclick="addNewQuestion()">Thêm câu hỏi</Button>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">STT</th>
+                <th scope="col">Chủ đề</th>
+                <th scope="col">Nội dung</th>
+                <th scope="col">Xem chi tiết</th>
+                <th scope="col">Sửa</th>
+                <th scope="col">Xóa</th>
+            </tr>
+        </thead>
+        <tbody id="resultBody">
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('http://localhost:7151/api/Question') // URL của API
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const resultBody = document.getElementById('resultBody');
+                resultBody.innerHTML = '';
+
+                data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+
+                    const cellId = document.createElement('td');
+                    cellId.textContent = index + 1;
+                    row.appendChild(cellId);
+
+                    const cellTitle = document.createElement('td');
+                    cellTitle.textContent = item.categoryName;
+                    row.appendChild(cellTitle);
+
+                    const cellBody = document.createElement('td');
+                    cellBody.textContent = item.questionContent;
+                    row.appendChild(cellBody);
+
+                    const eyeIcon = document.createElement('i');
+                    eyeIcon.classList.add('fas', 'fa-eye');
+                    const cellDetail = document.createElement('td');
+                    cellDetail.appendChild(eyeIcon);
+                    cellDetail.style.cursor = 'pointer'; 
+                    cellDetail.addEventListener('click', () => {
+                        viewDetail(item.questionId);
+                    });
+
+                    // Thêm cell vào hàng của bảng
+                    row.appendChild(cellDetail);
+
+                    const cellUpdate = document.createElement('td');
+                    const updateIcon = document.createElement('i');
+                    updateIcon.classList.add('fas', 'fa-edit', 'btn-update', 'mr-2');
+                    updateIcon.setAttribute('title', 'Update');
+                    cellUpdate.appendChild(updateIcon);
+                    row.appendChild(cellUpdate);
+                    updateIcon.addEventListener('click', () => {
+                        updateQuestion(item.questionId);
+                    });
+
+                    const cellDelete = document.createElement('td');
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.classList.add('fas', 'fa-trash-alt', 'btn-delete', 'mr-2');
+                    deleteIcon.setAttribute('title', 'Delete');
+                    cellDelete.appendChild(deleteIcon);
+                    cellDelete.addEventListener('click', () => {
+                        deleteQuestion(item.questionId);
+                    });
+                    row.appendChild(cellDelete);
+
+                    resultBody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+                const resultBody = document.getElementById('resultBody');
+                resultBody.innerHTML = '<tr><td colspan="3">Failed to load data</td></tr>';
+            });
+    });
+    ;
+
+    function updateQuestion(questionId) {
+        window.location.href = `/Question/UpdateQuestion?id=${questionId}`;
+    }
+
+    function deleteQuestion(questionId) {
+        if (confirm(`Bạn có chắc chắn muốn xóa câu hỏi có ID ${questionId}?`)) {
+            fetch(`http://localhost:7151/api/Question/${questionId}`, {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to delete question');
+                    }
+                    console.log('Question deleted successfully');
+                })
+                .catch(error => console.error('Error deleting question:', error));
+        }
+    }
+
+
+    function viewDetail(questionId) {
+        window.location.href = `/Question/detailQuestion?id=${questionId}`;
+    }
+
+    function addNewQuestion(){
+        window.location.href = `/Question/addQuestion`;
+    }
+</script>

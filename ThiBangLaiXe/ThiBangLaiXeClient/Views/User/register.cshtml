@@ -1,0 +1,48 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div>
+    <h2>Register</h2>
+    <label for="registerFirstName">First Name:</label>
+    <input type="text" id="registerFirstName" required><br>
+    <label for="registerLastName">Last Name:</label>
+    <input type="text" id="registerLastName" required><br>
+    <label for="registerEmail">Email:</label>
+    <input type="email" id="registerEmail" required><br>
+    <label for="registerPhone">Phone:</label>
+    <input type="text" id="registerPhone" required><br>
+    <label for="registerPassword">Password:</label>
+    <input type="password" id="registerPassword" required><br>
+    <button onclick="register()">Register</button>
+</div>
+<script>
+    function register() {
+        const firstName = document.getElementById('registerFirstName').value;
+        const lastName = document.getElementById('registerLastName').value;
+        const email = document.getElementById('registerEmail').value;
+        const phone = document.getElementById('registerPhone').value;
+        const password = document.getElementById('registerPassword').value;
+
+        fetch('http://localhost:7151/api/User/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                firstName,
+                lastName,
+                email,
+                phone,
+                password
+            })
+        })
+            .then(response => response.text())
+            .then(data => 
+                alert("register successfull")
+                window.location.href ="/User/login";
+            )
+            .catch(error => console.error('Error:', error));
+    }
+</script>

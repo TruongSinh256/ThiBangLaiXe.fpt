@@ -1,0 +1,105 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_MyLayout.cshtml";
+}
+<h1>Kết quả bài thi</h1>
+<div id="resultContainer">
+   
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const takeId = urlParams.get('takeId');
+
+    function fetchTakeAndAnswers(takeId) {
+        fetch(`http://localhost:7151/api/Take/take/${takeId}`)
+            .then(response => response.json())
+            .then(take => {
+                const quizId = take.quizId;
+                const userId = take.userId;
+                const takeContent = JSON.parse(take.takeContent);
+
+                // Lấy danh sách các câu hỏi và câu trả lời của bài thi
+                fetch(`http://localhost:7151/api/TakeAnswer/id?id=${takeId}`)
+                    .then(response => response.json())
+                    .then(takeAnswers => {
+                        const questionIds = takeAnswers.map(answer => answer.questionId);
+                        const answerIds = takeAnswers.map(answer => answer.answerId);
+
+                        // Gọi API để kiểm tra các câu trả lời có phải là câu trả lời đúng
+                        const checkAnswerPromises = takeAnswers.map(takeAnswer => {
+                            return fetch(`http://localhost:7151/api/Answer/${takeAnswer.questionId}/${takeAnswer.answerId}`)
+                                .then(response => response.json())
+                                .then(isCorrect => {
+                                    return { ...takeAnswer, isCorrect };
+                                });
+                        });
+
+                        // Lấy nội dung câu hỏi
+                        const questionPromises = questionIds.map(questionId => {
+                            return fetch(`http://localhost:7151/api/Question/${questionId}`)
+                                .then(response => response.json());
+                        });
+
+                        // Đợi tất cả các promise hoàn thành
+                        Promise.all([Promise.all(checkAnswerPromises), Promise.all(questionPromises)])
+                            .then(([answerResults, questionResults]) => {
+                                const correctCount = answerResults.filter(result => result.isCorrect).length;
+                                const totalQuestions = questionIds.length;
+
+                                // Gắn nội dung câu hỏi vào kết quả trả lời
+                                answerResults.forEach(answerResult => {
+                                    const question = questionResults.find(q => q.questionId === answerResult.questionId);
+                                    answerResult.questionContent = question ? question.questionContent : "Nội dung câu hỏi không tìm thấy";
+                                });
+
+                                // Hiển thị kết quả
+                                displayResult(correctCount, totalQuestions, take, answerResults);
+                            })
+                            .catch(error => {
+                                console.error('Error checking answers or fetching questions:', error);
+                            });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching TakeAnswers:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching Take:', error);
+            });
+    }
+
+    function displayResult(correctCount, totalQuestions, take, answers) {
+        const resultContainer = document.getElementById('resultContainer');
+        const startTime = new Date(take.startAt);
+        const endTime = new Date(take.endAt);
+        const duration = Math.floor((endTime - startTime) / 1000 / 60); // Tính thời gian làm bài theo phút
+
+        let resultHtml = `
+                <h2>Kết quả bài thi</h2>
+                <p>Thời gian làm bài: ${duration} phút</p>
+                <p>Số câu đúng: ${correctCount} / ${totalQuestions}</p>
+                <p>Kết quả: ${correctCount >= 20 ? 'Đỗ' : 'Rớt'}</p>
+                <h3>Chi tiết bài thi</h3>
+            `;
+
+        answers.forEach(answer => {
+            resultHtml += `
+                    <div class="question-detail">
+                        <h4>Câu hỏi: ${answer.questionContent}</h4>
+                        <p>Đáp án bạn chọn: ${answer.takeAnswerContent}</p>
+                        <p>Kết quả: ${answer.isCorrect ? 'Đúng' : 'Sai'}</p>
+                    </div>
+                `;
+        });
+
+        resultContainer.innerHTML = resultHtml;
+    }
+
+    // Gọi hàm fetchTakeAndAnswers khi trang được tải
+    document.addEventListener("DOMContentLoaded", fetchTakeAndAnswers(takeId));
+</script>
+
+

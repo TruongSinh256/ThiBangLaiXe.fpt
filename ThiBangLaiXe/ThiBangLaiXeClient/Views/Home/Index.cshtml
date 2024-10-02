@@ -1,0 +1,93 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model List<ThiBangLaiXeClient.ViewModels.QuizVM>
+
+<div class="container-fluid bg-primary px-0 px-md-5 mb-5">
+    <div class="row align-items-center px-3">
+        <div class="col-lg-6 text-center text-lg-left">
+            <h4 class="text-white mb-4 mt-5 mt-lg-0"></h4>
+            <h1 class="display-3 font-weight-bold text-white">
+                Thi bằng lái xe máy cho người mới
+            </h1>
+            <p class="text-white mb-4">
+                Chúng tôi cung cấp các bài thi bằng lái xe uy tín!
+            </p>
+            <a href="" class="btn btn-secondary mt-1 py-3 px-5">Ôn lý thuyết!</a>
+        </div>
+        <div class="col-lg-6 text-center text-lg-right">
+            <img class="img-fluid mt-5" src="img/header.png" alt="" />
+        </div>
+    </div>
+</div>
+
+<!-- About Start -->
+<!-- About End -->
+<!-- Class Start -->
+<div class="container-fluid pt-5">
+    <div class="container">
+        <div class="text-center pb-2">
+            <p class="section-title px-5">
+                <span class="px-2">Đề thi</span>
+            </p>
+            <h1 class="mb-4">Bằng lái xe A1</h1>
+        </div>
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-lg-4 mb-5">
+                    <div class="card border-0 bg-light shadow-sm pb-2">
+                        <img class="card-img-top mb-2" src="img/class-1.jpg" alt="" />
+                        <div class="card-body text-center">
+                            <h4 class="card-title">@item.Title</h4>
+                            <p class="card-text">
+                                @item.QuizContent
+                            </p>
+                        </div>
+                        <div class="card-footer bg-transparent py-4 px-5">
+                            <div class="row border-bottom">
+                                <div class="col-6 py-1 text-right border-right">
+                                    <strong>Điểm</strong>
+                                </div>
+                                <div class="col-6 py-1">@item.Score</div>
+                            </div>
+                            <div class="row border-bottom">
+                                <div class="col-6 py-1 text-right border-right">
+                                    <strong>Thời gian</strong>
+                                </div>
+                                <div class="col-6 py-1">@item.Time</div>
+                            </div>
+                            <div class="row border-bottom">
+                                <div class="col-6 py-1 text-right border-right">
+                                    <strong>Bằng</strong>
+                                </div>
+                                <div class="col-6 py-1">@item.CategoryName</div>
+                            </div>
+                        </div>
+                        <a href="/Quiz?id=@item.QuizId" class="btn btn-primary px-4 mx-auto mb-4 btnThiNgay" style="display:block">Thi ngay</a>
+                        <span class="mes" style="display:block">Bạn cần <a href="/User/login?id=@item.QuizId"> đăng nhập</a> để làm bài</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function checkAuthStatus() {
+        const token = localStorage.getItem('check');
+
+        const btnThiNgays = document.querySelectorAll('.btnThiNgay');
+        const mesElements = document.querySelectorAll('.mes');
+        debugger;
+        if (token) {
+            btnThiNgays.forEach(btn => btn.style.display = 'block');
+            mesElements.forEach(mes => mes.style.display = 'none');
+        } else {
+            mesElements.forEach(mes => mes.style.display = 'block');
+            btnThiNgays.forEach(btn => btn.style.display = 'none');
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", checkAuthStatus);
+</script>

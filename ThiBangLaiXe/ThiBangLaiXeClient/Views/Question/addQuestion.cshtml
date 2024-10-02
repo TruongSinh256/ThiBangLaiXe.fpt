@@ -1,0 +1,272 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Thêm câu hỏi";
+}
+<h2>@ViewData["Title"]</h2>
+<style>
+
+
+    .container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    form div {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    input[type="checkbox"] {
+        transform: scale(1.5);
+        margin-right: 10px;
+    }
+
+    button[type="button"],
+    button[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+        button[type="button"]:hover,
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+    .error-message {
+        color: red;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    #answers h3 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+</style>
+<div class="container">
+    <h2>Thêm Câu Hỏi</h2>
+    <form id="addQuestionForm" class="row">
+        <div class="col-6">
+            <div>
+                <label>Thể loại câu hỏi:</label>
+                <select id="categoryName" name="categoryName" required>
+                    <option value="A1" selected>A1</option>
+                    <option value="A2">A2</option>
+                </select>
+                <span class="error-message" id="categoryNameError"></span>
+            </div>
+            <div>
+                <label>Điểm:</label>
+                <input type="number" id="score" name="score" step="0.1" required>
+                <span class="error-message" id="scoreError"></span>
+            </div>
+            <div>
+                <label>Nội dung câu hỏi:</label>
+                <textarea id="questionContent" name="questionContent" required></textarea>
+                <span class="error-message" id="questionContentError"></span>
+            </div>
+            <div>
+                <label>Trạng thái:</label>
+                <input type="checkbox" id="status" name="status">
+                <span class="error-message" id="statusError"></span>
+            </div>
+            <div>
+                <label>Hình ảnh:</label>
+                <input type="file" id="image" name="image">
+                <span class="error-message" id="imageError"></span>
+            </div>
+        </div>
+        <div class="col-6">
+            <div id="answers">
+                <button type="button" onclick="addAnswer()">Thêm câu trả lời</button>
+            </div>
+        </div>
+
+        <button type="submit">Lưu</button>
+    </form>
+</div>
+
+
+<script>
+    document.getElementById('addQuestionForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        clearErrors();
+
+        const categoryName = document.getElementById('categoryName').value;
+        const score = document.getElementById('score').value;
+        const questionContent = document.getElementById('questionContent').value;
+        const status = document.getElementById('status').checked;
+        const imageInput = document.getElementById('image');
+
+        let isValid = true;
+
+        if (!categoryName) {
+            showError('categoryNameError', 'Category Name is required.');
+            isValid = false;
+        }
+
+        if (!score || isNaN(score) || score < 0) {
+            showError('scoreError', 'Score must be a positive number.');
+            isValid = false;
+        }
+
+        if (!questionContent) {
+            showError('questionContentError', 'Question Content is required.');
+            isValid = false;
+        }
+
+        if (imageInput.files.length > 0) {
+            const image = imageInput.files[0];
+            const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+            if (!validImageTypes.includes(image.type)) {
+                showError('imageError', 'Image must be a valid image format (JPEG, PNG, GIF).');
+                isValid = false;
+            }
+        }
+
+        if (!isValid) {
+            return;
+        }
+        debugger
+        const formData = new FormData();
+        formData.append('categoryName', categoryName);
+        formData.append('score', score);
+        formData.append('questionContent', questionContent);
+        formData.append('status', status);
+
+        if (imageInput.files.length > 0) {
+            formData.append('image', imageInput.files[0]);
+        }
+
+
+
+        formData.append('answers', JSON.stringify(answers));
+
+        try {
+            const response = await fetch(`http://localhost:7151/api/Question`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const question = await response.json();
+                const questionId = question.questionId;
+                const answers = [];
+                const answerElements = document.querySelectorAll('.answer');         
+                if (answerElements.length < 2) {
+                    alert("Phải có ít nhất 2 câu trả lời.");
+                    return;
+                }
+                let hasCorrectAnswer = false;
+                answerElements.forEach(function (answerElement) {
+                    const answerContent = answerElement.querySelector('.answerContent').value;
+                    const correct = answerElement.querySelector('.correct').checked;
+                    if (correct) {
+                        hasCorrectAnswer = true;
+                    }
+                    answers.push({
+                        QuestionId: questionId,
+                        Correct: correct,
+                        AnswerContent: answerContent,
+                        Active: true
+                    });
+                });
+                if (!hasCorrectAnswer) {
+                    alert("Phải có ít nhất một đáp án đúng.");
+                    return;
+                }
+                const addAnswerResponse = await fetch(`http://localhost:7151/api/Answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(answers)
+                });
+
+                if (addAnswerResponse.ok) {
+                    alert('Câu hỏi và câu trả lời được tạo thành công!');
+                    location.reload();
+                } else {
+                    alert('Tạo lỗi.');
+                }
+            } else {
+                alert('Có lỗi.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while creating the question and answers.');
+        }
+    });
+
+    function addAnswer() {
+        const answersDiv = document.getElementById('answers');
+        const answerIndex = document.querySelectorAll('.answer').length;
+
+        const answerDiv = document.createElement('div');
+        answerDiv.classList.add('answer');
+
+        answerDiv.innerHTML = `
+                    <h4>Câu trả lời ${answerIndex + 1}</h4>
+                    <div>
+                        <label>Nội dung:</label>
+                        <input type="text" class="answerContent" required>
+                    </div>
+                    <div>
+                        <label>Đúng:</label>
+                        <input type="checkbox" class="correct" >
+                    </div>
+                `;
+
+        answersDiv.appendChild(answerDiv);
+    }
+
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        errorElement.textContent = message;
+        errorElement.style.color = 'red';
+    }
+
+    function clearErrors() {
+        const errorMessages = document.querySelectorAll('.error-message');
+        errorMessages.forEach(function (errorMessage) {
+            errorMessage.textContent = '';
+        });
+    }
+</script>

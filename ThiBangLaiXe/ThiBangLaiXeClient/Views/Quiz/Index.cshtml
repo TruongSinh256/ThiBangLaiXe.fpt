@@ -1,0 +1,340 @@
+﻿@*
+
+*@
+@{
+    Layout = "~/Views/Shared/_MyLayout.cshtml";
+}
+<div class="timer" id="timer">Thời gian: 60:00</div>
+<div class="container">
+    <div class="quiz-content" id="quizContent">
+        <!-- Questions will be inserted here -->
+    </div>
+    <div>
+        <h2>Danh Sách Câu Hỏi</h2>
+        <div class="quiz-sidebar">
+
+            <table id="questionListTable">
+                <thead>
+                    <tr>
+                        <th>Câu hỏi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <button onclick="submitQuiz()" id="submitQuizBtn">Nộp Bài</button>
+    </div>
+
+</div>
+<script>
+    // Khởi tạo các biến toàn cục
+    let startTimeQuiz = new Date();
+    let quizQuestions = [];
+    let quizDuration = 0;
+    let selectedAnswers = {};
+    let correctAnswers = {};
+    let takeIdforResult = 0;
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id');
+
+    // Hàm fetch dữ liệu từ API
+    function fetchDataFromAPI() {
+        // Fetch thời gian và thông tin bài thi từ API
+        fetch(`http://localhost:7151/api/Quiz/${quizId}`)
+            .then(response => response.json())
+            .then(data => {
+                quizDuration = data.time;
+                localStorage.setItem('quizID', quizId);
+                const storedTimeLeft = loadTimeLeft();
+                const display = document.getElementById('timer');
+                const timeLeft = storedTimeLeft !== null ? storedTimeLeft : quizDuration;
+                startTimer(timeLeft, display);
+            })
+            .catch(error => {
+                console.error('Error fetching quiz data:', error);
+            });
+
+        // Fetch danh sách câu hỏi từ API
+        fetch(`http://localhost:7151/api/QuestionQuiz/id?id=${quizId}`)
+            .then(response => response.json())
+            .then(data => {
+                quizQuestions = data;
+                quizQuestions.sort((a, b) => a.questionOrder - b.questionOrder);
+
+                // Fetch tất cả các câu hỏi và đáp án trước khi render
+                const questionPromises = quizQuestions.map(question => {
+                    return fetch(`http://localhost:7151/api/Question/${question.questionId}`)
+                        .then(response => response.json())
+                        .then(questionData => {
+                            return fetch(`http://localhost:7151/api/Answer/${question.questionId}`)
+                                .then(response => response.json())
+                                .then(answersData => {
+                                    correctAnswers[question.questionId] = answersData
+                                        .filter(answer => answer.correct)
+                                        .map(answer => answer.answerContent);
+                                    return { ...questionData, answers: answersData };
+                                });
+                        });
+                });
+
+                // Đợi tất cả các câu hỏi và đáp án được fetch xong
+                Promise.all(questionPromises)
+                    .then(fullQuestions => {
+                        quizQuestions = fullQuestions;
+                        renderQuiz();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching full questions data:', error);
+                    });
+            })
+            .catch(error => {
+                console.error('Error fetching quiz questions:', error);
+            });
+    }
+
+    // Hàm để load các lựa chọn đã lưu từ localStorage
+    function loadSelectedAnswers() {
+        const storedAnswers = localStorage.getItem('selectedAnswers');
+        return storedAnswers ? JSON.parse(storedAnswers) : {};
+    }
+
+    function loadTimeLeft() {
+        const storedTimeLeft = localStorage.getItem('minutes');
+        return storedTimeLeft ? parseInt(storedTimeLeft, 10) : null;
+    }
+
+    // Hàm render bài thi
+    function renderQuiz() {
+        const quizContent = document.getElementById('quizContent');
+        const questionListTableBody = document.getElementById('questionListTable').querySelector('tbody');
+
+        if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
+            console.error('quizQuestions is not an array or is empty:', quizQuestions);
+            return;
+        }
+
+        // Lấy các lựa chọn đã lưu từ localStorage
+        const savedAnswers = loadSelectedAnswers();
+
+        quizQuestions.forEach((question, index) => {
+            let imageUrl = question.imageUrl ? question.imageUrl.replace("wwwroot", "") : '';
+
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('question');
+            questionDiv.innerHTML = `
+                    <h3>Câu ${index + 1}: ${question.questionContent}</h3>
+                    ${imageUrl ? `<img src="http://localhost:7151/${imageUrl}" />` : ''}
+                `;
+
+            // Thêm checkbox để người dùng có thể chọn
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.innerHTML = `
+                    <input type="checkbox" id="q${question.questionId}_checkbox"
+                        onchange="saveCheckboxState(${question.questionId}, this.checked)">
+                    <label for="q${question.questionId}_checkbox">Lưu ý</label>
+                `;
+            questionDiv.appendChild(checkboxDiv);
+
+            // Khôi phục trạng thái của checkbox từ localStorage
+            const checkboxState = localStorage.getItem(`checkbox_${question.questionId}`);
+            if (checkboxState === 'true') {
+                checkboxDiv.querySelector('input[type="checkbox"]').checked = true;
+            }
+
+            // Tạo các div cho các câu trả lời
+            question.answers.forEach((answer, i) => {
+                const answerDiv = document.createElement('div');
+                answerDiv.innerHTML = `
+                        <input type="radio" id="q${question.questionId}_a${i}" name="q${question.questionId}" value="${answer.answerContent}"
+                            onchange="saveAnswer(${question.questionId}, '${answer.answerContent}', ${index}, ${answer.answerId})">
+                        <label for="q${question.questionId}_a${i}">${answer.answerContent}</label>
+                    `;
+                questionDiv.appendChild(answerDiv);
+
+                // Nếu đáp án này đã được chọn trước đó, khôi phục trạng thái được chọn
+                if (savedAnswers[question.questionId] && savedAnswers[question.questionId].answerId === answer.answerId) {
+                    answerDiv.querySelector('input[type="radio"]').checked = true;
+                }
+            });
+
+            quizContent.appendChild(questionDiv);
+
+            // Render danh sách câu hỏi trong bảng bên cạnh
+            const row = document.createElement('tr');
+            row.innerHTML = `<td id="question_${index}">${index + 1}</td>`;
+            questionListTableBody.appendChild(row);
+
+            // Nếu câu hỏi này đã được trả lời trước đó, đánh dấu nó
+            if (savedAnswers[question.questionId]) {
+                const questionCell = document.getElementById(`question_${index}`);
+                if (questionCell) {
+                    questionCell.classList.add('selected');
+                }
+            }
+        });
+    }
+
+    function saveCheckboxState(questionId, isChecked) {
+        localStorage.setItem(`checkbox_${questionId}`, isChecked);
+    }
+    // Hàm bắt đầu đếm ngược thời gian
+    function startTimer(duration, display) {
+        let timer = duration * 60;
+        let minutes, seconds;
+
+        const intervalId = setInterval(function () {
+            minutes = Math.floor(timer / 60);
+            seconds = timer % 60;
+
+            minutes = minutes < 10 ? `0${minutes}` : minutes;
+            seconds = seconds < 10 ? `0${seconds}` : seconds;
+
+            localStorage.setItem('minutes', minutes);
+            display.textContent = `Thời gian: ${minutes}:${seconds}`;
+
+            if (--timer < 0) {
+                clearInterval(intervalId);
+                submitQuiz();
+            }
+        }, 1000);
+    }
+
+
+
+    // Hàm để lưu các lựa chọn vào localStorage
+    function saveSelectedAnswers() {
+        localStorage.setItem('selectedAnswers', JSON.stringify(selectedAnswers));
+    }
+
+    // Hàm lưu câu trả lời của người dùng
+    function saveAnswer(questionId, answer, questionIndex, answerId) {
+        selectedAnswers[questionId] = {
+            answerContent: answer,
+            answerId: answerId // Lưu AnswerId của câu trả lời đã chọn
+        };
+
+        // Đánh dấu câu hỏi đã chọn bằng cách thay đổi màu nền thành xanh
+        const questionCell = document.getElementById(`question_${questionIndex}`);
+        if (questionCell) {
+            questionCell.classList.add('selected');
+        }
+
+        // Lưu lựa chọn vào localStorage
+        saveSelectedAnswers();
+    }
+
+    // Hàm nộp bài thi
+    function submitQuiz() {
+        let hasUncheckedCheckbox = false;
+
+        // Kiểm tra trạng thái của tất cả các checkbox
+        quizQuestions.forEach(question => {
+            const checkboxState = localStorage.getItem(`checkbox_${question.questionId}`);
+            if (checkboxState === 'true') {
+                hasUncheckedCheckbox = true;
+            }
+        });
+
+        // Nếu có checkbox chưa được chọn, yêu cầu xác nhận từ người dùng
+        if (hasUncheckedCheckbox && !confirm("Có một số câu hỏi được đánh dấu để lưu ý. Bạn có muốn tiếp tục nộp bài không?")) {
+            return;
+        }
+
+        // Xác nhận nộp bài
+        if (confirm("Bạn có chắc chắn muốn nộp bài không?")) {
+            let score = 0;
+            const answers = [];
+
+            // So sánh các đáp án đã chọn với các đáp án đúng
+            for (let questionId in selectedAnswers) {
+                if (correctAnswers[questionId] && correctAnswers[questionId].includes(selectedAnswers[questionId].answerContent)) {
+                    score += 1; // Tăng điểm nếu đáp án đúng
+                }
+
+                // Tìm AnswerId của câu trả lời đã chọn
+                const answerId = quizQuestions.find(q => q.questionId == questionId).answers
+                    .find(a => a.answerContent == selectedAnswers[questionId].answerContent).answerId;
+                 debugger
+                // Tạo đối tượng TakeAnswer cho mỗi câu trả lời
+                answers.push({
+                    QuestionId: parseInt(questionId),
+                    AnswerId: answerId,
+                    TakeAnswerContent: selectedAnswers[questionId].answerContent,
+                    TakeId: 0 // Sẽ được cập nhật sau khi tạo Take
+                });
+            }
+
+            console.log('Answers to be sent:', answers); // Debugging
+
+            // Tạo bài thi (Take)
+            const take = {
+                UserId: 1, // Cập nhật UserId nếu cần
+                QuizId: quizId, // Cập nhật QuizId nếu cần
+                Score: score,
+                StartAt: startTimeQuiz, // Thời gian bắt đầu
+                EndAt: new Date(), // Thời gian kết thúc
+                TakeContent: JSON.stringify(selectedAnswers),
+                Status: true
+            };
+
+            // Gửi yêu cầu tạo bài thi
+            fetch('http://localhost:7151/api/Take', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(take)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error('Failed to create take: ' + JSON.stringify(errorData));
+                        });
+                    }
+                    return response.json();
+                })
+                .then(createdTake => {
+                    // Cập nhật TakeId cho mỗi câu trả lời
+                    takeIdforResult = createdTake.takeId;
+                    answers.forEach(answer => answer.TakeId = createdTake.takeId);
+
+                    // Gửi yêu cầu lưu các câu trả lời
+                    return fetch('http://localhost:7151/api/TakeAnswer', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(answers)
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error('Failed to save take answers: ' + JSON.stringify(errorData));
+                        });
+                    }
+
+                    // Xóa dữ liệu lưu trữ tạm thời
+                    localStorage.removeItem('minutes');
+                    localStorage.removeItem('seconds');
+                    localStorage.removeItem('selectedAnswers');
+                    localStorage.removeItem('timeLeft');
+
+                    // Chuyển hướng đến trang kết quả bài thi
+                    window.location.href = `/Quiz/result?takeId=${takeIdforResult}`;
+                })
+                .catch(error => {
+                    console.error('Error submitting quiz:', error);
+                });
+        }
+    }
+
+
+    // Gọi hàm fetchDataFromAPI khi trang được tải xong
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchDataFromAPI();
+    });
+</script>
+
+

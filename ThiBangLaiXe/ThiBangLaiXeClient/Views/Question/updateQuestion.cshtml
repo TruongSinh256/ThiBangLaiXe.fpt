@@ -1,0 +1,99 @@
+﻿@model ThiBangLaiXeClient.ViewModels.QuestionVM
+@{
+
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chỉnh sửa câu hỏi";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+
+
+    <title>Chỉnh sửa câu hỏi</title>
+    <form id="updateQuestionForm">
+        <div class="row">
+            <div class="col-6">
+                <div>
+                    <label>Thể loại câu hỏi:</label>
+                    <input type="text" id="categoryName" name="categoryName" required>
+                    <span class="error-message" id="categoryNameError"></span>
+                </div>
+                <div>
+                    <label>Điểm:</label>
+                    <input type="number" id="score" name="score" step="0.1" required>
+                    <span class="error-message" id="scoreError"></span>
+                </div>
+                <div>
+                    <label>Nội dung câu hỏi:</label>
+                    <textarea id="questionContent" name="questionContent" required></textarea>
+                    <span class="error-message" id="questionContentError"></span>
+                </div>
+                <div>
+                    <label>Trạng thái:</label>
+                    <input type="checkbox" id="status" name="status">
+                    <span class="error-message" id="statusError"></span>
+                </div>
+                <div>
+                    <label>Hình ảnh:</label>
+                    <input type="file" id="image" name="image">
+                    <span class="error-message" id="imageError"></span>
+                </div>
+
+            </div>
+            <div class="col-6">
+
+            </div>
+        </div>
+        
+
+        <button type="submit">Cập nhật</button>
+
+        
+    </form>
+
+    <script>
+    const updateQuestionForm = document.getElementById('updateQuestionForm');
+    updateQuestionForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Ngăn chặn hành động mặc định của form
+
+        // Thu thập dữ liệu từ các trường nhập liệu
+        const categoryName = document.getElementById('categoryName').value;
+        const score = document.getElementById('score').value;
+        const questionContent = document.getElementById('questionContent').value;
+        const status = document.getElementById('status').checked;
+        const image = document.getElementById('image').files[0];
+
+        // Tạo FormData để chứa dữ liệu form
+        const formData = new FormData();
+        formData.append('categoryName', categoryName);
+        formData.append('score', score);
+        formData.append('questionContent', questionContent);
+        formData.append('status', status);
+        if (image) {
+            formData.append('image', image);
+        }
+
+        try {
+            // Gọi API để cập nhật câu hỏi
+            const response = await fetch('http://localhost:7151/api/Question/id', {
+                method: 'PUT',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update question. Status: ${response.status}`);
+            }
+
+            alert('Question updated successfully!');
+            // Đưa ra các hành động tiếp theo, ví dụ như điều hướng người dùng đến trang khác, làm mới dữ liệu, vv.
+        } catch (error) {
+            console.error('Error updating question:', error);
+            alert('An error occurred while updating question. Please try again.');
+        }
+    });
+    </script>
+
+
+
+
+

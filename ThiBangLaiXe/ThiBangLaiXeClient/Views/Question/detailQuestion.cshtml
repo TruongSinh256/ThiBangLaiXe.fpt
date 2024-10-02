@@ -1,0 +1,73 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Chi tiết câu hỏi";
+}
+<h2>@ViewData["Title"]</h2>
+<div id="questionDetail">
+  
+</div>
+<div id="answerList">
+</div>
+<script>
+
+    async function fetchQuestionAndAnswers(questionId) {
+        try {
+            // Gọi API để lấy chi tiết câu hỏi và câu trả lời
+            const questionResponse = await fetch(`http://localhost:7151/api/Question/${questionId}`);
+            const answerResponse = await fetch(`http://localhost:7151/api/Answer/${questionId}`);
+
+            if (!questionResponse.ok) {
+                throw new Error(`Failed to fetch question. Status: ${questionResponse.status}`);
+            }
+            if (!answerResponse.ok) {
+                throw new Error(`Failed to fetch answers. Status: ${answerResponse.status}`);
+            }
+
+            const question = await questionResponse.json();
+            const answers = await answerResponse.json();
+
+            // Hiển thị chi tiết câu hỏi
+            const questionDetailElement = document.getElementById('questionDetail');
+            questionDetailElement.innerHTML = `
+                <p><strong>Thể loại:</strong> ${question.categoryName}</p>
+                <p><strong>Điểm:</strong> ${question.score}</p>
+                <p><strong>Nội dung câu hỏi:</strong> ${question.questionContent}</p>
+                <p><strong>Trạng thái:</strong> ${question.status ? 'Active' : 'Inactive'}</p>
+                <p><strong>hình ảnh:</strong> ${question.imageUrl ? `<img src="${question.imageUrl}" alt="Question Image" style="max-width: 300px;">` : 'Không có ảnh'}</p>
+            `;
+
+            // Hiển thị danh sách câu trả lời
+            const answerListElement = document.getElementById('answerList');
+            let answersHTML = '<h2>Câu trả lời</h2><ul>';
+            debugger
+            if (answers && answers.length > 0) {
+                answers.forEach(answer => {
+                    answersHTML += `
+                        <li>
+                            <strong>Nội dung câu trả lời:</strong> ${answer.answerContent}<br>
+                            <strong>Đáp án:</strong> ${answer.correct == 1 ? 'Đúng' : 'Sai'}<br>
+                            <strong>Trạng thái:</strong> ${answer.active ? 'Active' : 'Inactive'}
+                        </li>
+                    `;
+                });
+            } else {
+                answersHTML += '<li>No answers available</li>';
+            }
+
+            answersHTML += '</ul>';
+            answerListElement.innerHTML = answersHTML;
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while fetching question and answers.');
+        }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const questionId = urlParams.get('id');
+    fetchQuestionAndAnswers(questionId);
+
+
+</script>

@@ -1,0 +1,369 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Thêm bài kiểm tra";
+}
+<style>
+    .container {
+        margin: 20px;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    h4 {
+        font-size: 1.25rem;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    /* Table Styles */
+    #questionTable {
+        border-collapse: collapse;
+    }
+
+        #questionTable th, #questionTable td {
+            border: 1px solid #dee2e6;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #questionTable th {
+            background-color: #e9ecef;
+        }
+
+        #questionTable tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #questionTable tbody tr:hover {
+            background-color: #dfe4ea;
+        }
+
+    /* Form Styles */
+    input[type="text"],
+    input[type="number"],
+    select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #80bdff;
+            outline: none;
+        }
+
+    /* Buttons */
+    button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        color: forestgreen;
+        background-color: wheat;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-right: 10px;
+    }
+
+        button#addToQuizBtn {
+            background-color: #007bff;
+        }
+
+            button#addToQuizBtn:hover {
+                background-color: #0056b3;
+            }
+
+        button#createQuizBtn {
+            background-color: #28a745;
+        }
+
+            button#createQuizBtn:hover {
+                background-color: #218838;
+            }
+
+    /* Scrollable Sections */
+    #quizDetails,
+    #questionTable {
+        margin-bottom: 20px;
+    }
+
+    #quizQuestions {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+    }
+
+        #quizQuestions li {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+            #quizQuestions li:last-child {
+                border-bottom: none;
+            }
+</style>
+<h2>@ViewData["Title"]</h2>
+
+<div class="row">
+    <div class="col-6" >
+        <h2>Danh sách câu hỏi</h2>
+        <div style="overflow-y: scroll; max-height: 500px;">
+            <table id="questionTable" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nội dung câu hỏi</th>
+                        <th>Thể loại</th>
+                        <th>Điểm</th>
+                        <th>Trạng thái</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-6" >
+        <h2>Bài kiểm tra</h2>
+
+        <div id="quizDetails">
+            <label for="quizTitle">Tiêu đề:</label>
+            <input type="text" id="quizTitle" name="quizTitle" required><br>
+
+            <label for="quizCategory">Thể loại:</label>
+            <select type="" id="quizCategory" name="quizCategory" >
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+            </select><br>
+
+            <label for="quizTime">Thời gian (phút):</label>
+            <input type="number" id="quizTime" name="quizTime" required><br>
+
+            <label for="quizScore">Điểm tối đa:</label>
+            <input type="number" id="quizScore" name="quizScore" required><br>
+
+            <label for="quizContent">Tóm tắt:</label>
+            <input type="text" id="quizContent" name="quizContent" required><br>
+        </div>
+        <h4>Nội dung bài kiểm tra</h4>
+        <p id="quizQuestionCount">Số câu hỏi đã thêm: <span id="quizQuestionCountValue">0</span></p>
+        <div style="overflow-y: scroll; height: 370px;">
+            <ul id="quizQuestions">
+                <!-- Danh sách câu hỏi trong bài kiểm tra -->
+            </ul>
+        </div>
+        <button id="addToQuizBtn" hidden>Thêm câu hỏi vào bài kiểm tra</button>
+        <button id="createQuizBtn">Tạo bài kiểm tra</button>
+       
+    </div>
+    
+</div>
+   
+    
+    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const questionTable = document.getElementById('questionTable');
+            const quizQuestionsList = document.getElementById('quizQuestions');
+            const addToQuizBtn = document.getElementById('addToQuizBtn');
+            const createQuizBtn = document.getElementById('createQuizBtn');
+            const quizQuestionCountValue = document.getElementById('quizQuestionCountValue');
+            let quizQuestions = []; // Mảng chứa các câu hỏi đã chọn vào bài kiểm tra
+
+            // Function để render lại bảng câu hỏi
+            const renderTable = (questions) => {
+                questionTable.querySelector('tbody').innerHTML = '';
+                questions.forEach(question => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                                <td>${question.questionId}</td>
+                                <td>${question.questionContent}</td>
+                                <td>${question.categoryName}</td>
+                                <td>${question.score}</td>
+                                <td>${question.status ? 'Active' : 'Inactive'}</td>
+                                <td><button class="addQuestionBtn" data-id="${question.questionId}">Thêm</button></td>
+                            `;
+                    questionTable.querySelector('tbody').appendChild(row);
+                });
+            };
+
+            // Function để thêm câu hỏi vào bài kiểm tra
+            const addQuestionToQuiz = (questionId) => {
+                const question = quizQuestions.find(q => q.questionId === questionId);
+                if (question) {
+                    alert('Câu hỏi này đã có trong bài kiểm tra.');
+                    return;
+                }
+                const selectedQuestion = questions.find(q => q.questionId === questionId);
+                if (selectedQuestion) {
+                    quizQuestions.push(selectedQuestion);
+                    renderQuizQuestions();
+                }
+            };
+
+            // Function để render lại danh sách câu hỏi trong bài kiểm tra
+        const renderQuizQuestions = () => {
+            quizQuestionsList.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nội dung câu hỏi</th>
+                        <th>Thể loại</th>
+                        <th>Điểm</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${quizQuestions.map((question, index) => `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${question.questionContent}</td>
+                            <td>${question.categoryName}</td>
+                            <td>${question.score}</td>
+                            <td>${question.status ? 'Active' : 'Inactive'}</td>
+                            <td><button class="removeQuestionBtn" data-index="${index}">Xóa</button></td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+            quizQuestionCountValue.textContent = quizQuestions.length;
+        };
+
+            // Lấy danh sách câu hỏi từ server
+            let questions = [];
+            try {
+                const response = await fetch('http://localhost:7151/api/Question');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch questions.');
+                }
+                questions = await response.json();
+                renderTable(questions);
+            } catch (error) {
+                console.error('Error fetching questions:', error);
+                alert('An error occurred while fetching questions.');
+            }
+
+            // Sự kiện click nút "Thêm vào bài kiểm tra"
+            questionTable.addEventListener('click', async (event) => {
+                if (event.target.classList.contains('addQuestionBtn')) {
+                    const questionId = parseInt(event.target.dataset.id);
+                    addQuestionToQuiz(questionId);
+                }
+            });
+
+        // Sự kiện click nút "Xóa" trong bảng bài kiểm tra
+        quizQuestionsList.addEventListener('click', (event) => {
+            if (event.target.classList.contains('removeQuestionBtn')) {
+                const index = parseInt(event.target.dataset.index);
+                quizQuestions.splice(index, 1);
+                renderQuizQuestions();
+            }
+        });
+            // Sự kiện click nút "Tạo bài kiểm tra"
+        createQuizBtn.addEventListener('click', async () => {
+            try {
+                debugger
+                const title = document.getElementById('quizTitle').value.trim();
+                const categoryName = document.getElementById('quizCategory').value;
+                const time = parseInt(document.getElementById('quizTime').value);
+                const score = parseInt(document.getElementById('quizScore').value);
+                const content = document.getElementById('quizContent').value.trim();
+                const quizData = {
+                    title: title,
+                    categoryName: categoryName,
+                    time: time,
+                    score: score,
+                    quizContent: content 
+                };
+                if (!title) {
+                    alert('Tiêu đề không được để trống.');
+                    return false;
+                }
+                if (!categoryName) {
+                    alert('Thể loại không được để trống.');
+                    return false;
+                }
+                if (isNaN(time) || time <= 0) {
+                    alert('Thời gian phải là một số dương.');
+                    return false;
+                }
+                if (isNaN(score) || score <= 0) {
+                    alert('Điểm tối đa phải là một số dương.');
+                    return false;
+                }
+                if (!content) {
+                    alert('Tóm tắt không được để trống.');
+                    return false;
+                }
+                if(quizQuestions.length < 10){
+                    alert("Bài kiểm tra phải ít nhất 10 câu hỏi!");
+                    return false;
+                }
+                if (time < 10) {
+                    alert("Bài kiểm tra phải nhiều hơn 10 phút!");
+                    return false;
+                }
+                // Gửi dữ liệu lên server
+                const response = await fetch('http://localhost:7151/api/Quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(quizData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create quiz.');
+                }
+
+                // Lấy dữ liệu trả về từ server (nếu cần)
+                const result = await response.json();
+                const quizId = result.quizId; // Đây là quizId từ bài kiểm tra vừa tạo
+
+                // Chuẩn bị dữ liệu QuestionQuiz để gửi lên server
+                const questionQuizzes = quizQuestions.map(question => ({
+                    questionId: question.questionId,
+                    quizId: quizId
+                }));
+
+                // Gửi dữ liệu QuestionQuiz lên server để thêm vào cơ sở dữ liệu
+                const addQuestionsToQuizResponse = await fetch('http://localhost:7151/api/QuestionQuiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(questionQuizzes)
+                });
+
+                if (!addQuestionsToQuizResponse.ok) {
+                    throw new Error('Thêm thất bại.');
+                }
+
+                alert('Bài kiểm tra đã được tạo thành công và các câu hỏi đã được thêm vào.');
+                location.reload();
+                // Sau khi thành công, có thể chuyển hướng hoặc làm gì đó khác
+            } catch (error) {             
+                alert('Gặp vấn đề khi thêm bài thi! Hãy thử lại.');
+            }
+        });
+        });
+    </script>

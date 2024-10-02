@@ -1,0 +1,154 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="container mt-5">
+    <h2>Lịch sử</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Ngày thi</th>
+                <th>Đề kiểm tra</th>
+                <th>Thời gian làm bài</th>
+                <th>Điểm</th>
+                <th>Chi tiết</th>
+            </tr>
+        </thead>
+        <tbody id="examHistoryTableBody">
+            <!-- Exam history rows will be inserted here -->
+        </tbody>
+    </table>
+    <div id="examDetails" style="display:none;" class="mt-5">
+        <h2>Chi tiết bài thi</h2>
+        <div id="examDetailsList">
+            <!-- Exam details items will be inserted here -->
+        </div>
+        <button class="btn btn-primary mt-3" onclick="hideDetails()">Back</button>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+       // const userId = 1; // Replace with actual user ID
+        const userId = 1;
+        debugger
+        const check = localStorage.getItem('check');
+
+        if (check) {
+            document.getElementById('examDetails').style.display = 'block';
+        } else {
+            document.getElementById('examDetails').style.display = 'none';
+            return alert('Bạn cần đăng nhập để xem lịch sử bài thi!');
+        }
+        fetch(`http://localhost:7151/api/Take/${userId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.sort((a, b) => new Date(b.startAt) - new Date(a.startAt));
+                const startDate = new Date(history.startAt);
+                const endDate = new Date(history.endAt);
+                const duration = endDate.getTime() - startDate.getTime();
+
+                console.log(duration);
+                const minutes = Math.floor(duration / 60000);
+                const seconds = Math.floor((duration % 60000) / 1000);
+                const tableBody = document.getElementById('examHistoryTableBody');
+                data.forEach(history => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                                <td>${new Date(history.startAt).toLocaleDateString()}</td>
+                                <td>Đề kiểm tra số 1</td>
+                                <td>${minutes} : ${seconds} </td>
+                                <td>${history.score}</td>
+                                <td><button class="btn btn-info" onclick="showDetails(${history.takeId})">Details</button></td>
+                            `;
+                    tableBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching exam history:', error));
+    });
+
+    function showDetails(takeId) {
+        fetch(`http://localhost:7151/api/TakeAnswer/id?id=${takeId}`)
+            .then(response => response.json())
+            .then(data => {
+                const list = document.getElementById('examDetailsList');
+                list.innerHTML = ''; // Clear previous details
+
+                // Mảng để chứa các câu hỏi và câu trả lời
+                const questionDataMap = new Map(); // Map to store question data and answers
+
+                // Lấy thông tin chi tiết câu hỏi và các câu trả lời
+                const fetchQuestionAndAnswers = (questionId) => {
+                    return fetch(`http://localhost:7151/api/Question/${questionId}`)
+                        .then(response => response.json())
+                        .then(questionData => {
+                            return fetch(`http://localhost:7151/api/Answer/${questionId}`)
+                                .then(response => response.json())
+                                .then(answerData => ({ questionData, answerData }));
+                        });
+                };
+
+                // Xử lý dữ liệu chi tiết bài thi
+                const processDetails = (detail) => {
+                    if (!questionDataMap.has(detail.questionId)) {
+                        fetchQuestionAndAnswers(detail.questionId)
+                            .then(({ questionData, answerData }) => {
+                                questionDataMap.set(detail.questionId, {
+                                    question: questionData,
+                                    answers: answerData,
+                                    selectedAnswerId: detail.answerId
+                                });
+                                updateUI();
+                            })
+                            .catch(error => console.error('Error fetching question or answer details:', error));
+                    }
+                };
+
+                // Cập nhật giao diện với dữ liệu câu hỏi và câu trả lời
+                const updateUI = () => {
+                    const list = document.getElementById('examDetailsList');
+                    list.innerHTML = ''; // Clear previous details
+
+                    questionDataMap.forEach((value) => {
+                        const { question, answers, selectedAnswerId } = value;
+                        const correctAnswer = answers.find(a => a.correct);
+                        const isSelected = selectedAnswerId === correctAnswer.answerId;
+
+                        const item = document.createElement('div');
+                        item.classList.add('exam-detail-item', 'mb-3', 'p-3', 'border', 'rounded');
+
+                        item.innerHTML = `
+                            <p><strong>Câu hỏi:</strong> ${question.questionContent}</p>
+                            <div class="answers">
+                                ${answers.map(answer => {
+                            const isCorrect = answer.correct;
+                            const answerStyle = (selectedAnswerId === answer.answerId && !isCorrect) ? 'color: red;' : '';
+                            const answerSelectedCorrect = (selectedAnswerId === answer.answerId && isCorrect) ? 'color: green;' : '';
+                            return `
+                                                <p style="${answerStyle != '' ? answerStyle : answerSelectedCorrect}">${answer.answerContent}</p>
+                                        ${isCorrect && !isSelected ? `<p style="color: green;"><strong>Đáp án đúng:</strong> ${answer.answerContent}</p>` : ''}
+                                    `;
+                        }).join('')}
+                            </div>
+                        `;
+                        list.appendChild(item);
+                    });
+                };
+
+                // Xử lý từng chi tiết bài thi
+                data.forEach(detail => processDetails(detail));
+
+                document.getElementById('examDetails').style.display = 'block';
+            })
+            .catch(error => console.error('Error fetching exam details:', error));
+    }
+
+
+
+    function hideDetails() {
+        document.getElementById('examDetails').style.display = 'none';
+    }
+
+
+</script>

@@ -1,0 +1,101 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = ThiBangLaiXeClient
+build_property.RootNamespace = ThiBangLaiXeClient
+build_property.ProjectDir = C:\Users\ACER\source\repos\ThiBangLaiXe\ThiBangLaiXeClient\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\ACER\source\repos\ThiBangLaiXe\ThiBangLaiXeClient
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Home/HomeAdmin.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxIb21lQWRtaW4uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Question/addQuestion.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cYWRkUXVlc3Rpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Question/detailQuestion.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cZGV0YWlsUXVlc3Rpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Question/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Question/updateQuestion.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cdXBkYXRlUXVlc3Rpb24uY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Quiz/addNewQuiz.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxhZGROZXdRdWl6LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Quiz/getQuiz.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxnZXRRdWl6LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Quiz/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxJbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Quiz/result.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelxyZXN1bHQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Quiz/viewDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVpelx2aWV3RGV0YWlscy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Shared/_AdminLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BZG1pbkxheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Shared/_MyLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9NeUxheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/User/history.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxoaXN0b3J5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/User/login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxsb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/User/register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXNlclxyZWdpc3Rlci5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ACER/source/repos/ThiBangLaiXe/ThiBangLaiXeClient/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-wlv0816ltm
